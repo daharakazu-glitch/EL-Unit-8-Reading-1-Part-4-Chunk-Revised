@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Practice: Unit 8 Naghol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Serif:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f8fafc; }
+        .font-english { font-family: "Times New Roman", Times, "Noto Serif", serif; }
+        .font-japanese { font-family: "UD Digital Kyokasho-tai-R", "UD Digi Kyokasho N-R", "BIZ UDPGothic", "Hiragino Maru Gothic ProN", sans-serif; }
+
+        .boxed-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.4em;
+            height: 1.4em;
+            border: 2px solid #1e293b;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 0.85em;
+            font-weight: bold;
+            line-height: 1;
+            vertical-align: middle;
+            color: #1e293b;
+        }
+
+        .blank-container {
+            display: inline-flex; align-items: center; justify-content: flex-start;
+            height: 2.4em; background-color: #f1f5f9;
+            border-radius: 6px; padding: 0 10px; margin: 4px 3px; vertical-align: middle;
+            color: #64748b; font-weight: bold; font-size: 1em; cursor: pointer; border-bottom: none;
+            transition: all 0.2s ease; user-select: none;
+        }
+        .blank-container:hover { background-color: #e2e8f0; }
+
+        .blank-container.revealed {
+            justify-content: center; background-color: #ffffff !important;
+            color: #ef4444; border: 2px solid #ef4444; 
+            min-width: auto !important; 
+            padding: 0 12px; margin: 2px 3px;
+            cursor: default;
+        }
+
+        .blank-container.target-sentence {
+            background-color: #fffbeb; 
+            color: #d97706;
+        }
+        .blank-container.target-sentence.revealed {
+            color: #ef4444; border-color: #ef4444; background-color: #ffffff !important;
+        }
+
+        .paren { color: #94a3b8; font-size: 1.1em; }
+        .hint-text { margin-left: 4px; white-space: nowrap; }
+        .paren-right { margin-left: auto; }
+
+        .row-container { transition: all 0.3s ease; border-left: 4px solid transparent; }
+        .row-container.active-row { background-color: #eff6ff !important; border-left-color: #3b82f6; }
+
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .pulse-recording { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } 
+        }
+    </style>
+</head>
+<body class="text-slate-800 pb-80">
+
+    <nav class="bg-slate-800 text-white p-4 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-mask text-2xl text-blue-400"></i>
+                <h1 class="text-xl font-bold leading-tight font-english">Unit 8 Reading 1-4: Naghol</h1>
+            </div>
+            <div class="text-sm font-medium bg-slate-700 px-4 py-1.5 rounded-full border border-slate-600">
+                <span id="progress-text" class="text-blue-400 font-bold">0/0</span> Revealed
+            </div>
+        </div>
+    </nav>
+
+    <div class="sticky top-[72px] z-40 bg-f8fafc/95 backdrop-blur-sm transition-all border-b border-slate-200 shadow-sm py-3">
+        <div class="max-w-7xl mx-auto px-4 flex flex-wrap gap-3 justify-center md:justify-end items-center">
+            <div class="flex items-center bg-white rounded-full border border-slate-300 p-1 shadow-sm">
+                <button id="btn-play-all" onclick="togglePlayPause()" class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition font-medium text-sm w-24 justify-center">
+                    <i id="play-icon" class="fas fa-play"></i> <span id="play-text">Play</span>
+                </button>
+                <button id="btn-stop-all" onclick="stopAudio()" class="flex items-center gap-2 px-4 py-1.5 rounded-full text-slate-600 hover:bg-slate-100 transition font-medium text-sm ml-1" title="Reset Audio">
+                    <i class="fas fa-stop"></i> <span>Reset</span>
+                </button>
+            </div>
+            <div class="h-6 w-px bg-slate-300 mx-1 hidden md:block"></div>
+            <button id="btn-toggle-jp" class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition font-medium text-sm shadow-sm font-japanese">
+                <i class="fas fa-language text-lg text-slate-500"></i> <span>日本語: <b class="text-blue-600">ON</b></span>
+            </button>
+            <button onclick="resetApp()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition font-medium text-sm shadow-sm font-japanese">
+                <i class="fas fa-redo text-slate-500"></i> Reset
+            </button>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        <div class="bg-white shadow-md rounded-xl overflow-hidden border border-slate-200">
+            <div class="hidden md:flex bg-slate-100 border-b border-slate-300 text-sm font-bold text-slate-600">
+                <div class="flex-[3] p-4 border-r border-slate-200 font-english">English Text</div>
+                <div class="flex-[2] p-4 font-japanese">Japanese Meaning</div>
+            </div>
+            <div id="app" class="divide-y divide-slate-200"></div>
+        </div>
+    </main>
+
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 shadow-[0_-4px_20_rgba(0,0,0,0.1)] z-50">
+        <div class="max-w-4xl mx-auto flex flex-col gap-4">
+            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div class="flex items-center gap-3">
+                    <button id="btn-record" onclick="toggleRecording()" class="w-14 h-14 rounded-full bg-red-100 text-red-600 border-2 border-red-200 flex items-center justify-center hover:bg-red-200 transition shadow-sm">
+                        <i id="record-icon" class="fas fa-microphone text-xl"></i>
+                    </button>
+                    <div class="text-sm">
+                        <div id="recording-status" class="font-bold text-slate-700">Start Recording</div>
+                        <div class="text-xs text-slate-400">Record to check your pronunciation</div>
+                    </div>
+                </div>
+                <div id="audio-player-container" class="hidden flex items-center gap-2">
+                    <audio id="audio-playback" controls class="h-10 w-48 md:w-64"></audio>
+                </div>
+            </div>
+            
+            <div class="flex gap-2">
+                <button id="btn-reveal-all" onclick="revealAll()" class="flex-1 py-4 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-lg shadow-sm transition-all transform active:scale-[0.98]">
+                    Show All
+                </button>
+                <button id="btn-reveal-next" onclick="revealNext()" class="flex-[2] py-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xl shadow-lg flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] border-b-4 border-slate-900 active:border-b-0 active:translate-y-1">
+                    <span>Next Answer</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chunks = [
+            { id: 1,  pre: "", blank: "Just", post: " before the yam harvest,", jp: "ヤムイモの収穫の直前に，", hint: "(J)" },
+            { id: 2,  pre: "", blank: "on", post: " the tiny Pentecost Island in Vanuatu,", jp: "バヌアツの小さな島であるペンテコスト島では，", hint: "( )" },
+            { id: 3,  pre: "men ", blank: "tie", post: " two vines to their feet", jp: "男たちが2本のつるを彼らの両足に結びつける", hint: "(t)" },
+            { id: 4,  pre: "and jump from platforms 20–30 meters high.", blank: null, post: "", jp: "そして高さ20〜30メートルの足場からジャンプする。", hint: "" },
+            { id: 5,  pre: "They ", blank: "cross", post: " their arms", jp: "彼らは自分の腕を組んでいる", hint: "(c)" },
+            { id: 6,  pre: "", blank: "as", post: " they fall downward.", jp: "彼らが下に落ちる時には。", hint: "(a)" },
+            { id: 7,  pre: "When they ", blank: "reach", post: " the ground,", jp: "彼らが地上に達する時，", hint: "(r)" },
+            { id: 8,  pre: "their ", blank: "shoulders", post: " lightly graze the earth below.", jp: "彼らの肩が軽く下の地面をかすめる。", hint: "(sh)" },
+            { id: 9,  pre: "The most ", blank: "experienced", post: " jumpers usually jump", jp: "最も経験を積んだ跳び手は通常ジャンプする", hint: "(ex)" },
+            { id: 10, pre: "from the highest tower.", blank: null, post: "", jp: "最も高い塔から。", hint: "" },
+            { id: 11, pre: "", blank: "Unlike the other coming-of-age traditions we've read about,", post: "", jp: "ほかの成人の伝統とは違って私達がすでに読んだ，", hint: "(U)", isTarget: true },
+            { id: 12, pre: "", blank: "this is one that men can perform for many years.", post: "", jp: "これは男性が何年もの間行うことができるものである。", hint: "( )", isTarget: true },
+            { id: 13, pre: "A young boy usually does this", blank: null, post: "", jp: "若い男の子は通常これを行う", hint: "" },
+            { id: 14, pre: "", blank: "for", post: " ", blank2: "the", post2: " ", blank3: "first", post3: " ", blank4: "time", post4: "", jp: "初めて", hint: "( )", hint2: "( )", hint3: "(f)", hint4: "( )" },
+            { id: 15, pre: "when he is ", blank: "ready", post: " to end his childhood (around seven or eight years old).", jp: "子供時代を終える準備ができる時に（7〜8歳頃）。", hint: "(r)" },
+            { id: 16, pre: "He will start", blank: null, post: "", jp: "彼は始める", hint: "" },
+            { id: 17, pre: "by jumping from the lowest platform,", blank: null, post: "", jp: "最も低い足場からジャンプすることによって", hint: "" },
+            { id: 18, pre: "", blank: "which", post: " is about 20 meters high,", jp: "高さ20メートルほどの", hint: "( )" },
+            { id: 19, pre: "", blank: "as", post: " his mother watches him ", blank2: "holding", post2: " a memento of his childhood.", jp: "彼の母親が彼を見守るなか子供の頃の思い出の品を手に持ちつつ。", hint: "( )", hint2: "( )" },
+            { id: 20, pre: "", blank: "Once", post: " he has jumped,", jp: "一旦彼がジャンプすると，", hint: "(O)" },
+            { id: 21, pre: "the memento ", blank: "is", post: " ", blank2: "thrown", post2: " ", blank3: "away", post3: "", jp: "その思い出の品は捨てられ，", hint: "( )", hint2: "(th)", hint3: "(a)" },
+            { id: 22, pre: "and his childhood has finished.", blank: null, post: "", jp: "そして彼の子供時代は終わる。", hint: "" },
+            { id: 23, pre: "", blank: "Even", post: " ", blank2: "though", post2: " ", blank3: "the", post3: " ", blank4: "way", post4: " we become adults", jp: "たとえ私たちが大人になる方法が", hint: "( )", hint2: "( )", hint3: "( )", hint4: "( )" },
+            { id: 24, pre: "may be very different ", blank: "from", post: " ", blank2: "culture", post2: " ", blank3: "to", post3: " ", blank4: "culture", post4: ",", jp: "文化ごとに大きく異なるかもしれないとしても，", hint: "( )", hint2: "(c)", hint3: "( )", hint4: "(c)" },
+            { id: 25, pre: "we all ", blank: "have", post: " one thing ", blank2: "in", post2: " ", blank3: "common", post3: "", jp: "私たち皆に共通する点が1つある", hint: "( )", hint2: "( )", hint3: "(c)" },
+            { id: 26, pre: "—we ", blank: "take", post: " the time", jp: "それは私たちが時間を取ることだ。", hint: "(t)" },
+            { id: 27, pre: "to ", blank: "acknowledge", post: " the transitions of young people into adulthood.", jp: "若者が成人に移行するのを認める。", hint: "(ac)" }
+        ];
+
+        let state = {
+            jpVisible: true,
+            blanks: [], 
+            currentBlankIndex: 0,
+            mediaRecorder: null,
+            audioChunks: [],
+            isRecording: false,
+            isPlayingAudio: false,
+            currentAudioIndex: -1,
+            preferredVoice: null,
+            audioTimer: null
+        };
+
+        const app = document.getElementById('app');
+        const progressText = document.getElementById('progress-text');
+        
+        function init() {
+            app.innerHTML = '';
+            state.blanks = [];
+            
+            chunks.forEach((chunk, index) => {
+                const row = document.createElement('div');
+                const bgClass = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50';
+                row.className = `row-container flex flex-col md:flex-row md:items-stretch ${bgClass} border-l-8 border-l-transparent`;
+                row.id = `row-${chunk.id}`;
+
+                let sentenceHtml = `<span class="text-slate-800">${chunk.pre || ""}</span>`;
+                if(chunk.blank) sentenceHtml += createBlankHtml(chunk.id, chunk.blank, chunk.hint, chunk.isTarget);
+                sentenceHtml += `<span class="text-slate-800">${chunk.post || ""}</span>`;
+                if(chunk.blank2) sentenceHtml += createBlankHtml(chunk.id, chunk.blank2, chunk.hint2, chunk.isTarget);
+                if(chunk.post2) sentenceHtml += `<span class="text-slate-800">${chunk.post2}</span>`;
+                if(chunk.blank3) sentenceHtml += createBlankHtml(chunk.id, chunk.blank3, chunk.hint3, chunk.isTarget);
+                if(chunk.post3) sentenceHtml += `<span class="text-slate-800">${chunk.post3}</span>`;
+                if(chunk.blank4) sentenceHtml += createBlankHtml(chunk.id, chunk.blank4, chunk.hint4, chunk.isTarget);
+                if(chunk.post4) sentenceHtml += `<span class="text-slate-800">${chunk.post4}</span>`;
+
+                row.innerHTML = `
+                    <div class="flex-[3] p-6 md:border-r md:border-slate-200 flex items-center justify-between gap-4">
+                        <div class="text-2xl font-english leading-relaxed tracking-wide text-slate-900 w-full flex flex-wrap items-center">
+                            ${sentenceHtml}
+                        </div>
+                        <button onclick="playChunkAudio(${index})" class="shrink-0 w-12 h-12 rounded-full bg-slate-100 text-slate-500 hover:bg-blue-100 hover:text-blue-600 flex items-center justify-center transition border border-slate-200" title="Play line audio">
+                            <i class="fas fa-volume-up text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="flex-[2] p-6 flex items-center">
+                        <p class="jp-text text-slate-700 text-lg font-medium leading-relaxed font-japanese transition-opacity duration-300 ${state.jpVisible ? 'opacity-100' : 'opacity-0 select-none'}">${chunk.jp}</p>
+                    </div>
+                `;
+                app.appendChild(row);
+            });
+
+            const blankEls = document.querySelectorAll('.blank-container');
+            blankEls.forEach((el, idx) => {
+                el.onclick = () => revealSpecific(idx);
+                state.blanks[idx].element = el;
+            });
+
+            updateProgress();
+            setupVoice();
+        }
+
+        function setupVoice() {
+            const setVoice = () => {
+                const voices = window.speechSynthesis.getVoices();
+                state.preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))) 
+                                      || voices.find(v => v.lang.startsWith('en-US')) 
+                                      || voices.find(v => v.lang.startsWith('en'));
+            };
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = setVoice;
+            }
+            setVoice();
+        }
+
+        function getBlankWidth(word) {
+            if (!word) return '100px';
+            const len = word.length;
+            if (len <= 2) return '75px';   
+            if (len <= 5) return '130px';  
+            if (len <= 10) return '180px';  
+            if (len > 30) return '100%';
+            return '250px';                
+        }
+
+        function createBlankHtml(chunkId, word, hint, isTarget = false) {
+            state.blanks.push({ chunkId: chunkId, word: word, isRevealed: false, element: null });
+            let displayHint = hint ? (hint.startsWith('(') && hint.endsWith(')') ? hint.slice(1, -1).trim() : hint.trim()) : '';
+            let classes = "blank-container text-2xl font-english" + (isTarget ? " target-sentence" : "");
+            const dynamicWidth = getBlankWidth(word);
+            
+            return `<span class="${classes}" style="min-width: ${dynamicWidth}">
+                        <span class="paren">(</span>
+                        <span class="hint-text">${displayHint}</span>
+                        <span class="paren paren-right">)</span>
+                    </span>`;
+        }
+
+        function revealNext() {
+            if (state.currentBlankIndex >= state.blanks.length) return; 
+            const target = state.blanks[state.currentBlankIndex];
+            revealBlank(target);
+            state.currentBlankIndex++;
+            highlightRow(target.chunkId);
+            updateProgress();
+        }
+
+        function revealAll() {
+            state.blanks.forEach(blankObj => {
+                if (!blankObj.isRevealed) {
+                    revealBlank(blankObj);
+                }
+            });
+            state.currentBlankIndex = state.blanks.length;
+            updateProgress();
+        }
+
+        function revealSpecific(index) {
+            if (state.blanks[index].isRevealed) return;
+            const target = state.blanks[index];
+            revealBlank(target);
+            if (index === state.currentBlankIndex) state.currentBlankIndex++;
+            highlightRow(target.chunkId);
+            updateProgress();
+        }
+
+        function revealBlank(blankObj) {
+            const el = blankObj.element;
+            if(!el) return;
+            blankObj.isRevealed = true;
+            el.innerHTML = blankObj.word;
+            el.className = "blank-container revealed text-2xl font-english fade-in" + (el.classList.contains('target-sentence') ? ' target-sentence' : '');
+        }
+
+        function highlightRow(chunkId) {
+            document.querySelectorAll('.row-container').forEach(r => r.classList.remove('active-row'));
+            const row = document.getElementById(`row-${chunkId}`);
+            if(row) {
+                row.classList.add('active-row');
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function updateProgress() {
+            const revealedCount = state.blanks.filter(b => b.isRevealed).length;
+            progressText.innerText = `${revealedCount}/${state.blanks.length}`;
+            const btn = document.getElementById('btn-reveal-next');
+            if(revealedCount >= state.blanks.length) {
+                btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                btn.classList.remove('bg-slate-800', 'hover:bg-slate-700');
+                btn.innerHTML = '<i class="fas fa-check"></i> Complete!';
+            } else {
+                btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                btn.classList.add('bg-slate-800', 'hover:bg-slate-700');
+                btn.innerHTML = '<span>Next Answer</span><i class="fas fa-chevron-right"></i>';
+            }
+        }
+
+        function resetApp() {
+            stopAudio();
+            state.currentBlankIndex = 0;
+            init();
+            const btn = document.getElementById('btn-record');
+            const icon = document.getElementById('record-icon');
+            const status = document.getElementById('recording-status');
+            const playerContainer = document.getElementById('audio-player-container');
+            if(state.isRecording && state.mediaRecorder) {
+                state.mediaRecorder.stop();
+                state.isRecording = false;
+            }
+            btn.classList.add('bg-red-100', 'text-red-600');
+            btn.classList.remove('bg-red-600', 'text-white', 'pulse-recording');
+            icon.className = "fas fa-microphone text-xl";
+            status.innerText = "Start Recording";
+            status.className = "font-bold text-slate-700";
+            playerContainer.classList.add('hidden');
+        }
+
+        async function toggleRecording() {
+            const btn = document.getElementById('btn-record');
+            const icon = document.getElementById('record-icon');
+            const status = document.getElementById('recording-status');
+            const playerContainer = document.getElementById('audio-player-container');
+            const audioEl = document.getElementById('audio-playback');
+
+            if (!state.isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    state.mediaRecorder = new MediaRecorder(stream);
+                    state.audioChunks = [];
+                    state.mediaRecorder.ondataavailable = event => state.audioChunks.push(event.data);
+                    state.mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(state.audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        audioEl.src = audioUrl;
+                        playerContainer.classList.remove('hidden');
+                    };
+                    state.mediaRecorder.start();
+                    state.isRecording = true;
+                    btn.classList.remove('bg-red-100', 'text-red-600');
+                    btn.classList.add('bg-red-600', 'text-white', 'pulse-recording');
+                    icon.className = "fas fa-stop text-xl";
+                    status.innerText = "Recording...";
+                    status.className = "font-bold text-red-600 animate-pulse";
+                    playerContainer.classList.add('hidden'); 
+                } catch (err) {
+                    console.error("Mic access denied.", err);
+                }
+            } else {
+                if (state.mediaRecorder) state.mediaRecorder.stop();
+                state.isRecording = false;
+                btn.classList.add('bg-red-100', 'text-red-600');
+                btn.classList.remove('bg-red-600', 'text-white', 'pulse-recording');
+                icon.className = "fas fa-microphone text-xl";
+                status.innerText = "Start Recording";
+                status.className = "font-bold text-slate-700";
+            }
+        }
+
+        function togglePlayPause() {
+            if (state.isPlayingAudio) {
+                window.speechSynthesis.cancel();
+                state.isPlayingAudio = false;
+                updatePlayBtnUI(false);
+                if (state.audioTimer) clearInterval(state.audioTimer);
+            } else {
+                if (state.currentAudioIndex === -1) state.currentAudioIndex = 0;
+                playNextChunk();
+            }
+        }
+
+        function playNextChunk() {
+            if (state.currentAudioIndex >= chunks.length || state.currentAudioIndex === -1) {
+                stopAudio();
+                return;
+            }
+            state.isPlayingAudio = true;
+            updatePlayBtnUI(true);
+            if (state.audioTimer) clearInterval(state.audioTimer);
+            state.audioTimer = setInterval(() => {
+                if (window.speechSynthesis.speaking) window.speechSynthesis.resume();
+            }, 10000);
+            const chunk = chunks[state.currentAudioIndex];
+            const text = getChunkText(chunk);
+            highlightRow(chunk.id);
+            window.speechSynthesis.cancel();
+            const ut = new SpeechSynthesisUtterance(text);
+            if (state.preferredVoice) ut.voice = state.preferredVoice;
+            ut.lang = 'en-US';
+            ut.rate = 0.85;
+            ut.onend = () => {
+                if (state.isPlayingAudio) {
+                    state.currentAudioIndex++;
+                    playNextChunk();
+                }
+            };
+            ut.onerror = (e) => {
+                if(e.error !== 'interrupted') stopAudio();
+            };
+            setTimeout(() => {
+                window.speechSynthesis.speak(ut);
+            }, 50);
+        }
+
+        function playChunkAudio(index) {
+            stopAudio();
+            const chunk = chunks[index];
+            const text = getChunkText(chunk);
+            highlightRow(chunk.id);
+            const ut = new SpeechSynthesisUtterance(text);
+            if (state.preferredVoice) ut.voice = state.preferredVoice;
+            ut.lang = 'en-US';
+            ut.rate = 0.85;
+            window.speechSynthesis.speak(ut);
+        }
+
+        function stopAudio() {
+            window.speechSynthesis.cancel();
+            if (state.audioTimer) clearInterval(state.audioTimer);
+            state.isPlayingAudio = false;
+            state.currentAudioIndex = -1;
+            updatePlayBtnUI(false);
+            document.querySelectorAll('.row-container').forEach(r => r.classList.remove('active-row'));
+        }
+
+        function updatePlayBtnUI(isPlaying) {
+            const btn = document.getElementById('btn-play-all');
+            const icon = document.getElementById('play-icon');
+            const text = document.getElementById('play-text');
+            if (isPlaying) {
+                icon.className = "fas fa-pause";
+                text.innerText = "Pause";
+                btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            } else {
+                icon.className = "fas fa-play";
+                text.innerText = "Play";
+                btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+                btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }
+        }
+
+        function getChunkText(chunk) {
+            let fullText = (chunk.pre || "") + " " + (chunk.blank || "") + " " + (chunk.post || "");
+            if(chunk.blank2) fullText += " " + chunk.blank2 + " " + (chunk.post2 || "");
+            if(chunk.blank3) fullText += " " + chunk.blank3 + " " + (chunk.post3 || "");
+            if(chunk.blank4) fullText += " " + chunk.blank4 + " " + (chunk.post4 || "");
+            return fullText.replace(/\s+/g, ' ').trim();
+        }
+
+        document.getElementById('btn-toggle-jp').addEventListener('click', () => { 
+            state.jpVisible = !state.jpVisible; 
+            const s = document.getElementById('btn-toggle-jp').querySelector('b');
+            const els = document.querySelectorAll('.jp-text');
+            if(state.jpVisible) {
+                s.innerText = "ON"; s.className = "text-blue-600";
+                els.forEach(e => { e.classList.remove('opacity-0', 'select-none'); e.classList.add('opacity-100'); });
+            } else {
+                s.innerText = "OFF"; s.className = "text-gray-400";
+                els.forEach(e => { e.classList.remove('opacity-100'); e.classList.add('opacity-0', 'select-none'); });
+            }
+        });
+        
+        init();
+    </script>
+</body>
+</html>
